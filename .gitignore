@@ -1,0 +1,9 @@
+node_modules
+dist
+cdk.out
+*.js
+*.d.ts
+!website/assets/*.js
+.DS_Store
+*.log
+.env
