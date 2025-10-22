@@ -4,25 +4,53 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
+import * as acm from 'aws-cdk-lib/aws-certificatemanager';
+import * as route53 from 'aws-cdk-lib/aws-route53';
+import * as targets from 'aws-cdk-lib/aws-route53-targets';
 
 export class StaticWebsiteStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
+    const domainName = ssm.StringParameter.valueFromLookup(
+      this,
+      '/mobile-mechanic/domain-name'
+    );
+
+    const certificateArn = ssm.StringParameter.valueFromLookup(
+      this,
+      '/mobile-mechanic/certificate-arn'
+    );
+
+    const hostedZoneId = ssm.StringParameter.valueFromLookup(
+      this,
+      '/mobile-mechanic/hosted-zone-id'
+    );
+
     const websiteBucket = new s3.Bucket(this, 'WebsiteBucket', {
       websiteIndexDocument: 'index.html',
       websiteErrorDocument: 'index.html',
       publicReadAccess: true,
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ACLS_ONLY,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ACLS,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
     });
 
+    const certificate = acm.Certificate.fromCertificateArn(
+      this,
+      'Certificate',
+      certificateArn
+    );
+
     const distribution = new cloudfront.Distribution(this, 'WebsiteDistribution', {
       defaultBehavior: {
-        origin: new origins.S3StaticWebsiteOrigin(websiteBucket),
+        origin: new origins.S3Origin(websiteBucket),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        compress: true,
       },
+      domainNames: [domainName],
+      certificate: certificate,
       defaultRootObject: 'index.html',
       errorResponses: [
         {
@@ -31,6 +59,7 @@ export class StaticWebsiteStack extends cdk.Stack {
           responsePagePath: '/index.html',
         },
       ],
+      minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
     });
 
     new s3deploy.BucketDeployment(this, 'DeployWebsite', {
@@ -38,6 +67,19 @@ export class StaticWebsiteStack extends cdk.Stack {
       destinationBucket: websiteBucket,
       distribution,
       distributionPaths: ['/*'],
+    });
+
+    const hostedZone = route53.HostedZone.fromHostedZoneAttributes(this, 'HostedZone', {
+      hostedZoneId: hostedZoneId,
+      zoneName: domainName,
+    });
+
+    new route53.ARecord(this, 'WebsiteAliasRecord', {
+      zone: hostedZone,
+      recordName: domainName,
+      target: route53.RecordTarget.fromAlias(
+        new targets.CloudFrontTarget(distribution)
+      ),
     });
 
     new cdk.CfnOutput(this, 'BucketName', {
@@ -51,8 +93,13 @@ export class StaticWebsiteStack extends cdk.Stack {
     });
 
     new cdk.CfnOutput(this, 'WebsiteURL', {
-      value: `https://${distribution.distributionDomainName}`,
+      value: `https://${domainName}`,
       description: 'The URL of the website',
+    });
+
+    new cdk.CfnOutput(this, 'DistributionId', {
+      value: distribution.distributionId,
+      description: 'CloudFront distribution ID',
     });
   }
 }
