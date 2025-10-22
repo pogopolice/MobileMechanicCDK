@@ -83,15 +83,17 @@ aws acm wait certificate-validated \
 
 ## Step 3: Store Configuration in Parameter Store
 
-Store the required configuration values in AWS Systems Manager Parameter Store:
+Store the required configuration values in AWS Systems Manager Parameter Store.
+
+**Note:** Use your apex domain (e.g., `yourdomain.com`) for the domain name. The stack will create a Route53 A record at the apex of your hosted zone pointing to CloudFront.
 
 ```bash
-# Store domain name
+# Store domain name (use apex domain, e.g., yourdomain.com)
 aws ssm put-parameter \
   --name "/mobile-mechanic/domain-name" \
   --value "yourdomain.com" \
   --type "String" \
-  --description "Custom domain name for mobile mechanic website" \
+  --description "Custom domain name for mobile mechanic website (apex domain)" \
   --overwrite
 
 # Store certificate ARN

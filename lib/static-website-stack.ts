@@ -76,7 +76,6 @@ export class StaticWebsiteStack extends cdk.Stack {
 
     new route53.ARecord(this, 'WebsiteAliasRecord', {
       zone: hostedZone,
-      recordName: domainName,
       target: route53.RecordTarget.fromAlias(
         new targets.CloudFrontTarget(distribution)
       ),
