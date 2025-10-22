@@ -11,14 +11,16 @@ A professional static website for a mobile mechanic business specializing in hea
 - AWS CDK infrastructure code for S3 + CloudFront deployment
 - Stock images integrated for all service pages
 
-## Recent Changes (October 14, 2025)
+## Recent Changes (October 22, 2025)
 - Initial project setup with AWS CDK TypeScript configuration
 - Created 7 HTML pages: home, 5 service pages, and contact page
 - Implemented responsive CSS with blue color scheme and theme toggle
 - Added JavaScript for hamburger menu and localStorage theme persistence
 - Created CDK stack for S3 static hosting and CloudFront distribution
 - Added stock images for all pages
-- Created comprehensive README with deployment instructions
+- **Updated CDK stack to use custom domain from Parameter Store**
+- **Configured CloudFront with ACM certificate and Route53 A record**
+- Created comprehensive deployment guide (DEPLOYMENT.md)
 
 ## Project Architecture
 
@@ -33,7 +35,10 @@ A professional static website for a mobile mechanic business specializing in hea
 
 ### Infrastructure (AWS CDK)
 - **S3 Bucket**: Static website hosting with public read access
-- **CloudFront Distribution**: CDN for global content delivery
+- **CloudFront Distribution**: CDN with custom domain and SSL certificate
+- **ACM Certificate**: SSL/TLS certificate for HTTPS (must be in us-east-1)
+- **Route53**: A record for custom domain pointing to CloudFront
+- **Parameter Store**: Configuration management for domain settings
 - **Deployment**: Automated bucket deployment with cache invalidation
 
 ### Pages Structure
@@ -62,10 +67,13 @@ A professional static website for a mobile mechanic business specializing in hea
 ## Local Development
 Run `npm run preview` to start a local server on port 5000
 
-## AWS Deployment
-1. Bootstrap CDK: `npx cdk bootstrap` (first time only)
-2. Build: `npm run build`
-3. Deploy: `npm run deploy`
+## AWS Deployment with Custom Domain
+1. Set up Parameter Store values (domain name, certificate ARN, hosted zone ID)
+2. Bootstrap CDK: `npx cdk bootstrap` (first time only)
+3. Build: `npm run build`
+4. Deploy: `npm run deploy`
+
+See DEPLOYMENT.md for complete setup instructions including ACM certificate creation and Route53 configuration.
 
 ## Dependencies
 - aws-cdk-lib: AWS CDK framework

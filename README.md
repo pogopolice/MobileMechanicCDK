@@ -28,41 +28,48 @@ npm run preview
 
 This will start a local HTTP server on port 5000. Open your browser to `http://localhost:5000` to view the website.
 
-## AWS Deployment
+## AWS Deployment with Custom Domain
 
-### Prerequisites
+This website is configured to use a **custom domain** stored in AWS Systems Manager Parameter Store.
 
-- AWS Account with appropriate credentials configured
-- AWS CLI installed and configured
-- Node.js and npm installed
+### Quick Start
 
-### Bootstrap CDK (First Time Only)
+**For detailed setup instructions including custom domain configuration, see [DEPLOYMENT.md](DEPLOYMENT.md).**
+
+### Required Parameter Store Values
+
+Before deploying, you must create three parameters in AWS Parameter Store:
 
 ```bash
+# Your custom domain name
+aws ssm put-parameter --name "/mobile-mechanic/domain-name" --value "yourdomain.com" --type "String"
+
+# ACM certificate ARN (must be in us-east-1 for CloudFront)
+aws ssm put-parameter --name "/mobile-mechanic/certificate-arn" --value "arn:aws:acm:us-east-1:..." --type "String"
+
+# Route53 hosted zone ID
+aws ssm put-parameter --name "/mobile-mechanic/hosted-zone-id" --value "Z1234..." --type "String"
+```
+
+### Deploy
+
+```bash
+# Bootstrap CDK (first time only)
 npx cdk bootstrap
-```
 
-### Build the CDK App
-
-```bash
+# Build and deploy
 npm run build
-```
-
-### Deploy to AWS
-
-```bash
-npm run deploy
+npx cdk deploy
 ```
 
 This will:
-1. Create an S3 bucket for static website hosting
-2. Deploy all website files to the S3 bucket
-3. Create a CloudFront distribution for CDN delivery
-4. Output the CloudFront URL where your website is accessible
+1. Read configuration from Parameter Store
+2. Create an S3 bucket for static website hosting
+3. Create a CloudFront distribution with your custom domain and SSL certificate
+4. Create a Route53 A record pointing to CloudFront
+5. Deploy all website files to S3
 
-### View Deployment Details
-
-After deployment, the CloudFront URL will be displayed in the output. You can also view it in the AWS Console.
+After deployment, your website will be available at `https://yourdomain.com`
 
 ### Destroy Infrastructure
 
@@ -107,12 +114,12 @@ Edit `website/contact.html` to update:
 - Service hours
 - Service area
 
-### Add Custom Domain
+### Configure Custom Domain
 
-To use a custom domain with Route53, update `lib/static-website-stack.ts` to include:
-- Certificate Manager certificate
-- Route53 hosted zone
-- CloudFront alias configuration
+The website uses AWS Parameter Store for configuration. See [DEPLOYMENT.md](DEPLOYMENT.md) for complete setup instructions including:
+- Creating and validating ACM certificates
+- Setting up Route53 hosted zones
+- Configuring Parameter Store values
 
 ### Theme Colors
 
