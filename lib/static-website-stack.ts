@@ -18,7 +18,7 @@ export class StaticWebsiteStack extends cdk.Stack {
       '/mobile-mechanic/domain-name'
     );
 
-    const certificateArn = ssm.StringParameter.valueFromLookup(
+    const certificateArn = ssm.StringParameter.valueForStringParameter(
       this,
       '/mobile-mechanic/certificate-arn'
     );
@@ -32,7 +32,7 @@ export class StaticWebsiteStack extends cdk.Stack {
       websiteIndexDocument: 'index.html',
       websiteErrorDocument: 'index.html',
       publicReadAccess: true,
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ACLS,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ACLS_ONLY,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
     });
@@ -45,7 +45,7 @@ export class StaticWebsiteStack extends cdk.Stack {
 
     const distribution = new cloudfront.Distribution(this, 'WebsiteDistribution', {
       defaultBehavior: {
-        origin: new origins.S3Origin(websiteBucket),
+        origin: new origins.S3StaticWebsiteOrigin(websiteBucket),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         compress: true,
       },
