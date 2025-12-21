@@ -1,4 +1,7 @@
 {
   "ssm:account=829258668234:parameterName=/mobile-mechanic/domain-name:region=us-east-1": "crawfordfl.com",
-  "ssm:account=829258668234:parameterName=/mobile-mechanic/hosted-zone-id:region=us-east-1": "Z09385481LIXKD0QBRV02"
+  "ssm:account=829258668234:parameterName=/mobile-mechanic/hosted-zone-id:region=us-east-1": "Z09385481LIXKD0QBRV02",
+  "acknowledged-issue-numbers": [
+    34892
+  ]
 }
